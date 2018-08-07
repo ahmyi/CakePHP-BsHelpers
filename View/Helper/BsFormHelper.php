@@ -1,8 +1,10 @@
 <?php
 
+
 App::uses('FormHelper', 'View/Helper');
 App::uses('Set', 'Utility');
-
+// App::uses('BsHelpers.BsHelper', 'View/Helper');
+// $mediaHelper = $this->Helpers->load('Media', $mediaSettings);
 /**
  *
  * Helper CakePHP pour créer des éléments formulaires du Bootstrap Twitter version 3
@@ -17,7 +19,7 @@ class BsFormHelper extends FormHelper {
  *
  * @var array
  */
-	public $helpers = array('Bs', 'Html', 'Js');
+	public $helpers = array('BsHelpers.Bs', 'Html', 'Js');
 
 /**
  * The name of the helper
@@ -382,7 +384,7 @@ class BsFormHelper extends FormHelper {
 			$this->Bs->load('lengthDetector');
 
 			// JS send to the page
-			$this->Bs->loadJS('$(document).ready(function(){$("[name*=' . $fieldName . '\].length-detector").attr("data-length-detector-class", "' . $ldClass . '").lengthDetector(' . $jsOptions . ');});', true, array('block' => 'scriptBottom'));
+			_loadJS('$(document).ready(function(){$("[name*=' . $fieldName . '\].length-detector").attr("data-length-detector-class", "' . $ldClass . '").lengthDetector(' . $jsOptions . ');});', true, array('block' => 'scriptBottom'));
 			unset($options['length-detector-option']);
 		}
 		return parent::input($fieldName, $options);
@@ -688,7 +690,7 @@ class BsFormHelper extends FormHelper {
 		// 3rd party libraries and css
 		$this->Bs->load('ckeditor');
 
-		$this->Bs->loadJS('CKEDITOR.replace("' . $nameForReplace . '", ' . json_encode($ckEditorOptions) . ');', true);
+		_loadJS('CKEDITOR.replace("' . $nameForReplace . '", ' . json_encode($ckEditorOptions) . ');', true);
 		return $out;
 	}
 
@@ -1143,7 +1145,7 @@ class BsFormHelper extends FormHelper {
 			// Generate the spin icon
 			$out .= '<i class="fa fa-spinner fa-spin form-submit-wait text-' . $type . '"></i>';
 
-			$this->Bs->loadJS(
+			$this->_loadJs(
 				'+function ($) {
 					$("#' . $this->_getIdForm() . '").submit(function(){
 						$("#' . $this->_getIdForm() . ' input[type=\'submit\']").prop("disabled" , true);
@@ -1224,6 +1226,9 @@ class BsFormHelper extends FormHelper {
  * @return string
  */
 	public function chosen($fieldName = 'fieldname', $options = array(), $attr = array(), $chosenAttr = array()) {
+		// if(!$this->Bs){
+		// 	$mediaHelper = $this->Helpers->load('Media', $mediaSettings);
+		// }
 		$class = Inflector::slug($fieldName);
 
 		// Default option for the select
@@ -1251,7 +1256,7 @@ class BsFormHelper extends FormHelper {
 		// 3rd party libraries and css
 		$this->Bs->load('chosen');
 		// JS send to the page
-		$this->Bs->loadJS(
+		_loadJS(
 			'+function ($) {
 				$("#' . $attributes['id'] . '").chosen(' . $chosenAttr . ');
 			}(jQuery);',
@@ -1260,5 +1265,33 @@ class BsFormHelper extends FormHelper {
 
 		return $select;
 	}
+
+	/**
+	 * Block name to load JS elements
+	 *
+	 * @var bool
+	 */
+		public $blockJs = 'scriptBottom';
+
+
+	/**
+	 * Load JS in view when needed
+	 *
+	 * @param string $url 	 The JS url
+	 * @param bool $type 	 True for inline block, false to load form external link
+	 * @param array $options Option for scriptBlock
+	 * @return void 		 Close the view block
+	 */
+		public function _loadJS($url, $type = false, array $options = array()) {
+			if($this->Bs){
+				return $this->Bs->loadJs($url,$type,$options);	
+			}
+			if ($type === true) {
+				$this->_View->append($this->blockJs, parent::scriptBlock($url, $options));
+			} else {
+				$this->_View->append($this->blockJs, parent::script($url));
+			}
+			return $this->_View->end();
+		}
 
 }
